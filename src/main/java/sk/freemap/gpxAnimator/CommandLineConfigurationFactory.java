@@ -24,22 +24,20 @@ import java.util.List;
 public final class CommandLineConfigurationFactory {
 
 	private final List<String> inputGpxList = new ArrayList<String>();
-	
+
 	private final List<String> labelList = new ArrayList<String>();
-	
+
 	private final List<Color> colorList = new ArrayList<Color>();
-	
+
 	private final List<Long> timeOffsetList = new ArrayList<Long>();
-	
+
 	private final List<Long> forcedPointIntervalList = new ArrayList<Long>();
-	
+
 	private final List<Float> lineWidthList = new ArrayList<Float>();
 
 	private final boolean gui;
 
-	
 	private final Configuration configuration;
-	
 
 	public CommandLineConfigurationFactory(final String[] args) throws UserException {
 		final Configuration.Builder cfg = Configuration.createBuilder();
@@ -48,13 +46,13 @@ public final class CommandLineConfigurationFactory {
 
 		for (int i = 0; i < args.length; i++) {
 			final String arg = args[i];
-			
+
 			try {
 				final Option option = arg.startsWith("--") ? Option.fromName(arg.substring(2)) : null;
-				
+
 				if (option == null) {
-					throw new UserException("unrecognised option " + arg
-							+ "\nrun program with --help option to print help");
+					throw new UserException(
+							"unrecognised option " + arg + "\nrun program with --help option to print help");
 				} else {
 					switch (option) {
 					case ATTRIBUTION:
@@ -68,7 +66,8 @@ public final class CommandLineConfigurationFactory {
 						break;
 					case FLASHBACK_COLOR:
 						final long lv = Long.decode(args[++i]).longValue();
-						cfg.flashbackColor(new Color(lv < Integer.MAX_VALUE ? (int) lv : (int) (0xffffffff00000000L | lv), true));
+						cfg.flashbackColor(
+								new Color(lv < Integer.MAX_VALUE ? (int) lv : (int) (0xffffffff00000000L | lv), true));
 						break;
 					case FLASHBACK_DURATION:
 						final String s = args[++i];
@@ -148,6 +147,12 @@ public final class CommandLineConfigurationFactory {
 					case TAIL_DURATION:
 						cfg.tailDuration(Long.parseLong(args[++i]));
 						break;
+					case TILE_CACHE_PATH:
+						cfg.tileCachePath(args[++i]);
+						break;
+					case TILE_CACHE_AGE_LIMIT:
+						cfg.tileCacheTimeLimit(Long.parseLong(args[++i]));
+						break;
 					case TIME_OFFSET:
 						final String s2 = args[++i].trim();
 						timeOffsetList.add(s2.isEmpty() ? null : Long.valueOf(s2));
@@ -171,8 +176,8 @@ public final class CommandLineConfigurationFactory {
 					default:
 						throw new AssertionError();
 					}
-					
-// TODO				--configuration : args[++i];
+
+					// TODO --configuration : args[++i];
 				}
 			} catch (final NumberFormatException e) {
 				throw new UserException("invalid number for option " + arg);
@@ -180,10 +185,10 @@ public final class CommandLineConfigurationFactory {
 				throw new UserException("missing parameter for option " + arg);
 			}
 		}
-		
+
 		normalizeColors();
 		normalizeLineWidths();
-		
+
 		for (int i = 0, n = inputGpxList.size(); i < n; i++) {
 			final TrackConfiguration.Builder tcb = TrackConfiguration.createBuilder();
 			tcb.inputGpx(new File(inputGpxList.get(i)));
@@ -192,12 +197,12 @@ public final class CommandLineConfigurationFactory {
 			tcb.label(i < labelList.size() ? labelList.get(i) : "");
 			tcb.timeOffset(i < timeOffsetList.size() ? timeOffsetList.get(i) : Long.valueOf(0));
 			tcb.forcedPointInterval(i < forcedPointIntervalList.size() ? forcedPointIntervalList.get(i) : null);
-			
+
 			cfg.addTrackConfiguration(tcb.build());
 		}
-		
+
 		gui = args.length == 0 || forceGui;
-		
+
 		configuration = cfg.build();
 	}
 
@@ -215,7 +220,6 @@ public final class CommandLineConfigurationFactory {
 		}
 	}
 
-
 	private void normalizeLineWidths() {
 		final int size = inputGpxList.size();
 		final int size2 = lineWidthList.size();
@@ -229,15 +233,13 @@ public final class CommandLineConfigurationFactory {
 			}
 		}
 	}
-	
-	
+
 	public Configuration getConfiguration() {
 		return configuration;
 	}
-	
-	
+
 	public boolean isGui() {
 		return gui;
 	}
-	
+
 }

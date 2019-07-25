@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.*;
 import java.util.Map.Entry;
 
-
 public class Renderer {
 
 	private static final double MS = 1000d;
@@ -39,21 +38,20 @@ public class Renderer {
 
 	private final Configuration cfg;
 
-	private final List<List<TreeMap<Long, Point2D>>> timePointMapListList = new ArrayList<List<TreeMap<Long,Point2D>>>();
+	private final List<List<TreeMap<Long, Point2D>>> timePointMapListList = new ArrayList<List<TreeMap<Long, Point2D>>>();
 
 	private Font font;
 	private FontMetrics fontMetrics;
 
 	private long minTime = Long.MAX_VALUE;
-	private double minX = Double.POSITIVE_INFINITY, maxX = Double.NEGATIVE_INFINITY, minY = Double.POSITIVE_INFINITY, maxY = Double.NEGATIVE_INFINITY;
+	private double minX = Double.POSITIVE_INFINITY, maxX = Double.NEGATIVE_INFINITY, minY = Double.POSITIVE_INFINITY,
+			maxY = Double.NEGATIVE_INFINITY;
 
 	private double speedup;
-
 
 	public Renderer(final Configuration cfg) throws UserException {
 		this.cfg = cfg;
 	}
-
 
 	public void render(final RenderingContext rc) throws UserException {
 		final List<Long[]> spanList = new ArrayList<Long[]>();
@@ -71,7 +69,7 @@ public class Renderer {
 			final List<TreeMap<Long, Point2D>> timePointMapList = new ArrayList<TreeMap<Long, Point2D>>();
 
 			for (final List<LatLon> latLonList : gch.getPointLists()) {
-				final TreeMap<Long, Point2D> timePointMap = new TreeMap<Long,Point2D>();
+				final TreeMap<Long, Point2D> timePointMap = new TreeMap<Long, Point2D>();
 				toTimePointMap(timePointMap, i, latLonList);
 				timePointMapList.add(timePointMap);
 
@@ -79,8 +77,9 @@ public class Renderer {
 
 				Long t0 = timePointMap.firstKey();
 				Long t1 = timePointMap.lastKey() + cfg.getTailDuration();
-				test: { // code in the block merges connected spans; it is currently not important to do this
-					for (final Iterator<Long[]> iter = spanList.iterator(); iter.hasNext(); ) {
+				test: { // code in the block merges connected spans; it is currently not important to do
+						// this
+					for (final Iterator<Long[]> iter = spanList.iterator(); iter.hasNext();) {
 						final Long[] span = iter.next();
 						if (t0 > span[0] && t1 < span[1]) {
 							// swallowed
@@ -116,19 +115,21 @@ public class Renderer {
 			final boolean userSpecifiedHeight = cfg.getHeight() != null;
 			if (userSpecifiedHeight) {
 				final int height = cfg.getHeight();
-				final Integer zoom1 = (int) Math.floor(Math.log(Math.PI / 128.0 * (width - cfg.getMargin() * 2) / (maxX - minX)) / Math.log(2));
-				final Integer zoom2 = (int) Math.floor(Math.log(Math.PI / 128.0 * (height - cfg.getMargin() * 2) / (maxY - minY)) / Math.log(2));
+				final Integer zoom1 = (int) Math
+						.floor(Math.log(Math.PI / 128.0 * (width - cfg.getMargin() * 2) / (maxX - minX)) / Math.log(2));
+				final Integer zoom2 = (int) Math.floor(
+						Math.log(Math.PI / 128.0 * (height - cfg.getMargin() * 2) / (maxY - minY)) / Math.log(2));
 				zoom = (int) Math.min(zoom1, zoom2);
 			} else {
-				zoom = (int) Math.floor(Math.log(Math.PI / 128.0 * (width - cfg.getMargin() * 2) / (maxX - minX)) / Math.log(2));
+				zoom = (int) Math
+						.floor(Math.log(Math.PI / 128.0 * (width - cfg.getMargin() * 2) / (maxX - minX)) / Math.log(2));
 			}
 			rc.setProgress1(0, "computed zoom is " + zoom);
 		} else {
 			zoom = cfg.getZoom();
 		}
 
-		final double scale = zoom == null
-				? (width - cfg.getMargin() * 2) / (maxX - minX)
+		final double scale = zoom == null ? (width - cfg.getMargin() * 2) / (maxX - minX)
 				: (128.0 * (1 << zoom)) / Math.PI;
 
 		minX -= cfg.getMargin() / scale;
@@ -189,8 +190,7 @@ public class Renderer {
 
 		final BufferedImage bi = new BufferedImage(realWidth, realHeight, BufferedImage.TYPE_3BYTE_BGR);
 
-		final FrameWriter frameWriter = toImages
-				? new FileFrameWriter(frameFilePattern, ext, cfg.getFps())
+		final FrameWriter frameWriter = toImages ? new FileFrameWriter(frameFilePattern, ext, cfg.getFps())
 				: new VideoFrameWriter(cfg.getOutput(), cfg.getFps(), realWidth, realHeight);
 
 		final Graphics2D ga = (Graphics2D) bi.getGraphics();
@@ -201,7 +201,8 @@ public class Renderer {
 			ga.setColor(Color.white);
 			ga.fillRect(0, 0, realWidth, realHeight);
 		} else {
-			Map.drawMap(bi, cfg.getTmsUrlTemplate(), cfg.getBackgroundMapVisibility(), zoom, minX, maxX, minY, maxY, rc);
+			Map.drawMap(bi, cfg.getTmsUrlTemplate(), cfg.getBackgroundMapVisibility(), zoom, minX, maxX, minY, maxY, rc,
+					cfg.getTileCachePath(), cfg.getTileCacheTimeLimit());
 		}
 
 		if (cfg.getFontSize() > 0) {
@@ -211,7 +212,8 @@ public class Renderer {
 
 		speedup = cfg.getTotalTime() == null ? cfg.getSpeedup() : 1.0 * (maxTime - minTime) / cfg.getTotalTime();
 
-		final int frames = (int) ((maxTime + cfg.getTailDuration() - minTime) * cfg.getFps() / (MS * speedup));
+		// Adding 2000 (= 2s) here so the video stops 2s later than the track.
+		final int frames = (int) ((maxTime + 2000 - minTime) * cfg.getFps() / (MS * speedup));
 
 		final boolean keepLastFrame = cfg.getKeepLastFrame() != null && cfg.getKeepLastFrame().longValue() > 0;
 
@@ -254,9 +256,11 @@ public class Renderer {
 			}
 
 			final Color flashbackColor = cfg.getFlashbackColor();
-			if (skip > 0f && flashbackColor.getAlpha() > 0 && cfg.getFlashbackDuration() != null && cfg.getFlashbackDuration() > 0) {
+			if (skip > 0f && flashbackColor.getAlpha() > 0 && cfg.getFlashbackDuration() != null
+					&& cfg.getFlashbackDuration() > 0) {
 				final Graphics2D g2 = (Graphics2D) bi2.getGraphics();
-				g2.setColor(new Color(flashbackColor.getRed(), flashbackColor.getGreen(), flashbackColor.getBlue(), (int) (flashbackColor.getAlpha() * skip)));
+				g2.setColor(new Color(flashbackColor.getRed(), flashbackColor.getGreen(), flashbackColor.getBlue(),
+						(int) (flashbackColor.getAlpha() * skip)));
 				g2.fillRect(0, 0, bi2.getWidth(), bi2.getHeight());
 				skip -= 1000f / cfg.getFlashbackDuration() / cfg.getFps();
 			}
@@ -283,7 +287,6 @@ public class Renderer {
 		System.out.println("Done.");
 	}
 
-
 	private void drawWaypoints(final BufferedImage bi, final int frame, final TreeMap<Long, Point2D> wpMap) {
 		final Double waypointSize = cfg.getWaypointSize();
 		if (waypointSize == null || waypointSize.doubleValue() == 0.0 || wpMap.isEmpty()) {
@@ -294,11 +297,11 @@ public class Renderer {
 
 		final long t2 = getTime(frame);
 
-
 		if (t2 >= wpMap.firstKey()) {
 			for (final Point2D p : wpMap.subMap(wpMap.firstKey(), t2).values()) {
 				g2.setColor(Color.white);
-				final Ellipse2D.Double marker = new Ellipse2D.Double(p.getX() - waypointSize / 2.0, p.getY() - waypointSize / 2.0, waypointSize, waypointSize);
+				final Ellipse2D.Double marker = new Ellipse2D.Double(p.getX() - waypointSize / 2.0,
+						p.getY() - waypointSize / 2.0, waypointSize, waypointSize);
 				g2.setStroke(new BasicStroke(1f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
 				g2.fill(marker);
 				g2.setColor(Color.black);
@@ -309,14 +312,13 @@ public class Renderer {
 		}
 	}
 
-
 	private static class NamedPoint extends Point2D.Double {
 		private static final long serialVersionUID = 4011941819652468006L;
 		String name;
 	}
 
-
-	private void toTimePointMap(final TreeMap<Long, Point2D> timePointMap, final int i, final List<LatLon> latLonList) throws UserException {
+	private void toTimePointMap(final TreeMap<Long, Point2D> timePointMap, final int i, final List<LatLon> latLonList)
+			throws UserException {
 		long forcedTime = 0;
 
 		final TrackConfiguration trackConfiguration = cfg.getTrackConfigurationList().get(i);
@@ -395,17 +397,17 @@ public class Renderer {
 		}
 	}
 
-
 	private static double calculateSpeed(final GpxPoint lastPoint, final LatLon latLon, final long time) {
 		if (lastPoint == null) {
 			return 0;
 		}
-		
+
 		double dist = calculateDistance(lastPoint, latLon);
 		double timeDiff = time - lastPoint.getTime();
 
 		return (3_600_000 * dist) / timeDiff;
 	}
+
 	private static double calculateDistance(final GpxPoint lastPoint, final LatLon latLon) {
 		if (lastPoint == null) {
 			return 0;
@@ -415,7 +417,7 @@ public class Renderer {
 		double lon1 = lastPoint.getLatLon().getLon();
 		double lat2 = latLon.getLat();
 		double lon2 = latLon.getLon();
-		
+
 		if ((lat1 == lat2) && (lon1 == lon2)) {
 			return 0;
 		} else {
@@ -434,11 +436,9 @@ public class Renderer {
 		return Math.toRadians(maxLon);
 	}
 
-
 	private static double latToY(final double lat) {
 		return Math.log(Math.tan(Math.PI / 4 + Math.toRadians(lat) / 2));
 	}
-
 
 	private void drawInfo(final BufferedImage bi, final int frame, final Point2D marker) {
 		final String dateString = DATE_FORMAT.format(new Date(getTime(frame)));
@@ -453,7 +453,6 @@ public class Renderer {
 				bi.getHeight() - cfg.getMargin() - fontMetrics.getHeight() * 2);
 	}
 
-
 	private String getSpeedString(final Point2D point) {
 		if (point instanceof GpxPoint) {
 			final GpxPoint gpxPoint = (GpxPoint) point;
@@ -463,7 +462,6 @@ public class Renderer {
 			return "";
 		}
 	}
-
 
 	private String getLatLonString(final Point2D point) {
 		if (point instanceof GpxPoint) {
@@ -475,11 +473,9 @@ public class Renderer {
 		}
 	}
 
-
 	private void drawAttribution(final BufferedImage bi, final String attribution) {
 		printText(getGraphics(bi), attribution, cfg.getMargin(), bi.getHeight() - cfg.getMargin());
 	}
-
 
 	private Point2D drawMarker(final BufferedImage bi, final int frame) {
 		Point2D point = null;
@@ -508,11 +504,8 @@ public class Renderer {
 				point = floorEntry.getValue();
 				if (t2 - floorEntry.getKey() <= cfg.getTailDuration()) { // TODO make configurable
 					g2.setColor(ceilingEntry == null ? Color.white : trackConfiguration.getColor());
-					final Ellipse2D.Double marker = new Ellipse2D.Double(
-							point.getX() - markerSize / 2.0,
-							point.getY() - markerSize / 2.0,
-							markerSize,
-							markerSize);
+					final Ellipse2D.Double marker = new Ellipse2D.Double(point.getX() - markerSize / 2.0,
+							point.getY() - markerSize / 2.0, markerSize, markerSize);
 					g2.setStroke(new BasicStroke(1f));
 					g2.fill(marker);
 					g2.setColor(Color.black);
@@ -530,7 +523,6 @@ public class Renderer {
 		return point;
 	}
 
-
 	private void paint(final BufferedImage bi, final int frame, final long backTime) {
 		final Graphics2D g2 = getGraphics(bi);
 
@@ -543,7 +535,8 @@ public class Renderer {
 			final TrackConfiguration trackConfiguration = trackConfigurationList.get(i++);
 
 			for (final TreeMap<Long, Point2D> timePointMap : timePointMapList) {
-				g2.setStroke(new BasicStroke(trackConfiguration.getLineWidth(), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+				g2.setStroke(new BasicStroke(trackConfiguration.getLineWidth(), BasicStroke.CAP_ROUND,
+						BasicStroke.JOIN_ROUND));
 
 				final Long toTime = timePointMap.floorKey(time);
 
@@ -554,7 +547,7 @@ public class Renderer {
 				Point2D prevPoint = null;
 
 				if (backTime == 0) {
-					final long prevTime =  getTime(frame - 1);
+					final long prevTime = getTime(frame - 1);
 					Long fromTime = timePointMap.floorKey(prevTime);
 					if (fromTime == null) {
 						// try ceiling because we may be at beginning
@@ -565,21 +558,25 @@ public class Renderer {
 					}
 
 					g2.setPaint(trackConfiguration.getColor());
-					for (final Entry<Long, Point2D> entry: timePointMap.subMap(fromTime, true, toTime, true).entrySet()) {
+					for (final Entry<Long, Point2D> entry : timePointMap.subMap(fromTime, true, toTime, true)
+							.entrySet()) {
 						if (prevPoint != null) {
 							g2.draw(new Line2D.Double(prevPoint, entry.getValue()));
 						}
 						prevPoint = entry.getValue();
 					}
 				} else {
-					for (final Entry<Long, Point2D> entry: timePointMap.subMap(toTime - backTime, true, toTime, true).entrySet()) {
+					for (final Entry<Long, Point2D> entry : timePointMap.subMap(toTime - backTime, true, toTime, true)
+							.entrySet()) {
 						if (prevPoint != null) {
 							final float ratio = (backTime - time + entry.getKey()) * 1f / backTime;
 							if (ratio > 0) {
 								final Color color = trackConfiguration.getColor();
-								final float[] hsb = Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), new float[3]);
+								final float[] hsb = Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(),
+										new float[3]);
 								final Color c = Color.getHSBColor(hsb[0], hsb[1], (1f - ratio) * hsb[2]);
-								g2.setPaint(new Color(c.getRed(), c.getGreen(), c.getBlue(), (int) (ratio * (255 - color.getAlpha()) + color.getAlpha())));
+								g2.setPaint(new Color(c.getRed(), c.getGreen(), c.getBlue(),
+										(int) (ratio * (255 - color.getAlpha()) + color.getAlpha())));
 								g2.draw(new Line2D.Double(prevPoint, entry.getValue()));
 							}
 						}
@@ -590,11 +587,9 @@ public class Renderer {
 		}
 	}
 
-
 	private long getTime(final int frame) {
 		return (long) Math.floor(minTime + frame / cfg.getFps() * MS * speedup);
 	}
-
 
 	private void printText(final Graphics2D g2, final String text, final float x, final float y) {
 		final FontRenderContext frc = g2.getFontRenderContext();
@@ -619,7 +614,6 @@ public class Renderer {
 			yy += height;
 		}
 	}
-
 
 	private Graphics2D getGraphics(final BufferedImage bi) {
 		final Graphics2D g2 = (Graphics2D) bi.getGraphics();

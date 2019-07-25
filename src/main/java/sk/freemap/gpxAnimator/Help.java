@@ -16,7 +16,6 @@ package sk.freemap.gpxAnimator;
 
 import java.io.PrintWriter;
 
-
 public class Help {
 
 	public static void printHelp(final OptionHelpWriter w) {
@@ -28,11 +27,12 @@ public class Help {
 		} catch (final UserException e) {
 			throw new RuntimeException(e); // should never happen
 		}
-		
+
 		w.writeOptionHelp(Option.ATTRIBUTION, "text", false, cfg.getAttribution());
 		w.writeOptionHelp(Option.BACKGROUND_MAP_VISIBILITY, "visibility", false, cfg.getBackgroundMapVisibility());
 		w.writeOptionHelp(Option.COLOR, "color", true, "some nice color :-)");
-		w.writeOptionHelp(Option.FLASHBACK_COLOR, "ARGBcolor", false, "opaque white - #ffffffff"); // TODO cfg.getFlashbackColor()
+		w.writeOptionHelp(Option.FLASHBACK_COLOR, "ARGBcolor", false, "opaque white - #ffffffff"); // TODO
+																									// cfg.getFlashbackColor()
 		w.writeOptionHelp(Option.FLASHBACK_DURATION, "duration", false, cfg.getFlashbackDuration());
 		w.writeOptionHelp(Option.FONT_SIZE, "size", false, cfg.getFontSize());
 		w.writeOptionHelp(Option.FORCED_POINT_TIME_INTERVAL, "milliseconds", true, tc.getForcedPointInterval());
@@ -55,6 +55,8 @@ public class Help {
 		w.writeOptionHelp(Option.SKIP_IDLE, null, false, cfg.isSkipIdle());
 		w.writeOptionHelp(Option.SPEEDUP, "speedup", false, cfg.getSpeedup());
 		w.writeOptionHelp(Option.TAIL_DURATION, "time", false, cfg.getTailDuration());
+		w.writeOptionHelp(Option.TILE_CACHE_AGE_LIMIT, "seconds", false, cfg.getTileCacheTimeLimit());
+		w.writeOptionHelp(Option.TILE_CACHE_PATH, "text", false, cfg.getTileCachePath());
 		w.writeOptionHelp(Option.TIME_OFFSET, "milliseconds", true, tc.getTimeOffset());
 		w.writeOptionHelp(Option.TMS_URL_TEMPLATE, "template", false, cfg.getTmsUrlTemplate());
 		w.writeOptionHelp(Option.TOTAL_TIME, "time", false, cfg.getTotalTime());
@@ -62,11 +64,11 @@ public class Help {
 		w.writeOptionHelp(Option.WIDTH, "width", false, "(800)"); // cfg.getWidth()
 		w.writeOptionHelp(Option.ZOOM, "zoom", false, cfg.getZoom());
 	}
-	
+
 	public interface OptionHelpWriter {
 		void writeOptionHelp(Option option, String argument, boolean track, Object defaultValue);
 	}
-	
+
 	public static class PrintWriterOptionHelpWriter implements OptionHelpWriter {
 		private final PrintWriter pw;
 
@@ -75,7 +77,8 @@ public class Help {
 		}
 
 		@Override
-		public void writeOptionHelp(final Option option, final String argument, final boolean track, final Object defaultValue) {
+		public void writeOptionHelp(final Option option, final String argument, final boolean track,
+				final Object defaultValue) {
 			pw.print("--");
 			pw.print(option.getName());
 			if (argument != null) {
